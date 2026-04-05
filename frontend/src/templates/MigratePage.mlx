@@ -166,6 +166,7 @@ module CredentialsForm = struct
                 label="Invite code"
                 placeholder="a1b2c3d4"
                 required=true
+                autoFocus=true
                 showIndicator=false />
             else null )
           <Input
@@ -174,6 +175,7 @@ module CredentialsForm = struct
             label="Existing handle or DID"
             placeholder="you.bsky.social or did:plc:..."
             required=true
+            autoFocus=(not invite_required)
             showIndicator=false
           />
           <Input
@@ -259,6 +261,7 @@ module ResumeForm = struct
             label="Handle or DID"
             placeholder="you.bsky.social or did:plc:..."
             required=true
+            autoFocus=true
             showIndicator=false
           />
           <Input
@@ -320,6 +323,7 @@ module TwoFactorForm = struct
             type_="password"
             label="Password"
             required=true
+            autoFocus=true
             showIndicator=false
           />
           <Input
@@ -415,6 +419,7 @@ module PlcTokenForm = struct
           label="Confirmation code"
           placeholder="A1B2C-3D4E5"
           required=true
+          autoFocus=true
           showIndicator=false
         />
         <p className="text-xs text-mist-80 -mt-1">

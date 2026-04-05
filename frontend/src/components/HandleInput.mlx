@@ -6,7 +6,7 @@ type handle_status = Idle | Checking | Valid | Invalid of string
 
 let[@react.component] make ~name ?(label = "handle") ?(sr_only = false)
     ?(required = false) ?(showIndicator = true) ?(subdomainOnly = false)
-    ?placeholder ?hostname ?value ?onChange () =
+    ?placeholder ?hostname ?value ?onChange ?(autoFocus = false) () =
   let internalValue, setInternalValue = useState (fun () -> "") in
   let handleValue = Option.value value ~default:internalValue in
   let handleStatus, setHandleStatus = useState (fun () -> Idle) in
@@ -99,6 +99,7 @@ let[@react.component] make ~name ?(label = "handle") ?(sr_only = false)
       value=handleValue
       onChange=onHandleChange
       required
+      autoFocus
       showIndicator
       ?placeholder
       ?trailing

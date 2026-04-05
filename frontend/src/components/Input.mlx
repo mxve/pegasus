@@ -5,7 +5,8 @@ let req_marker = " *"
 
 let[@react.component] make ?id ~name ?(className = "") ?(type_ = "text") ?label
     ?(sr_only = false) ?value ?defaultValue ?placeholder ?autoComplete ?pattern
-    ?inputMode ?(required = false) ?(disabled = false) ?trailing
+    ?inputMode ?(required = false) ?(disabled = false) ?(autoFocus = false)
+    ?trailing
     ?(showIndicator = true) ?onChange () =
   let id = Option.value id ~default:name in
   let placeholder = if label <> None && sr_only then label else placeholder in
@@ -20,6 +21,7 @@ let[@react.component] make ?id ~name ?(className = "") ?(type_ = "text") ?label
       ?inputMode
       required
       disabled
+      autoFocus
       ?value
       ?defaultValue
       ?onChange

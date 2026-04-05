@@ -135,6 +135,7 @@ let[@react.component] make
               name="two_fa_code"
               type_="text"
               label="verification code"
+              autoFocus=true
               autoComplete="one-time-code"
               inputMode="numeric"
               pattern="[0-9A-Za-z\\-]*"
@@ -177,6 +178,7 @@ let[@react.component] make
               name="identifier"
               type_="text"
               label="identifier"
+              autoFocus=true
               autoComplete="username webauthn"
             />
             <Input

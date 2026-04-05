@@ -575,6 +575,7 @@ let[@react.component] make
                               label="One-time password"
                               placeholder="123456"
                               showIndicator=false
+                              autoFocus=true
                               inputMode="numeric"
                               value=totpCode
                               onChange=(fun e ->
