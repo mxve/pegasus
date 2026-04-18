@@ -19,7 +19,7 @@
  (url "git+https://github.com/janestreet/bin_prot.git#03c783d682f67db665dca44a1b34d41cd16e1e3f")
  (package
    (name bin_prot)
-   (version v0.17~preview.128.20+135))) ; this is actually v0.16~preview.128.20+135 but core requires >=v0.17
+   (version v0.17.0))) ; this is actually v0.16~preview.128.20+135 but core requires >=v0.17
 
 (pin ; these 4 all need to be pinned or they'll conflict
  (url "git+https://github.com/lthms/dream.git#h2-0-13") ; unmerged patch that prevents conflict with letters
@@ -72,6 +72,7 @@
   (timedesc (>= 3.1.0))
   (uri (>= 4.4.0))
   (uuidm (>= 0.9.10))
+  (uuseg (>= 17.0.0))
   (yojson (>= 3.0.0))
   (lwt_ppx (>= 5.9.1))
   (ppx_deriving_yojson (>= 3.9.1))
