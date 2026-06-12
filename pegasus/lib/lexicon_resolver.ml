@@ -16,8 +16,8 @@ type permission_set =
   ; permissions: permission list }
 [@@deriving yojson {strict= false}]
 
-type lexicon_value =
-  { type_: string [@key "$type"]
+type lexicon_def =
+  { type_: string [@key "type"]
   ; title: string option [@default None]
   ; detail: string option [@default None]
   ; permissions: permission list option [@default None] }
@@ -26,16 +26,23 @@ type lexicon_value =
 let cache : permission_set Ttl_cache.String_cache.t =
   Ttl_cache.String_cache.create (3 * Util.Time.hour) ()
 
+let schema_cache : Hermes_cli.Lexicon_types.lexicon_doc Ttl_cache.String_cache.t
+    =
+  Ttl_cache.String_cache.create (3 * Util.Time.hour) ()
+
 (* reuse dns client from id_resolver *)
 let dns_client = Id_resolver.Handle.dns_client
 
 (* resolve did authority for nsid *)
 let resolve_did_authority nsid =
   let authority = Util.Syntax.nsid_authority nsid in
+  let domain =
+    authority |> String.split_on_char '.' |> List.rev |> String.concat "."
+  in
   try%lwt
     let%lwt result =
       Dns_client_lwt.getaddrinfo dns_client Dns.Rr_map.Txt
-        (Domain_name.of_string_exn ("_lexicon." ^ authority))
+        (Domain_name.of_string_exn ("_lexicon." ^ domain))
     in
     match result with
     | Ok (_, t) -> (
@@ -74,23 +81,35 @@ let fetch_lexicon ~did ~nsid =
           ) )
   with exn -> Lwt.return_error (Printexc.to_string exn)
 
+(* extract defs.main from a lexicon schema document *)
+let extract_main_def record =
+  match Yojson.Safe.Util.(member "defs" record |> member "main") with
+  | `Null ->
+      Error "lexicon has no defs.main"
+  | main -> (
+    match lexicon_def_of_yojson main with
+    | Error e ->
+        Error ("failed to parse defs.main: " ^ e)
+    | Ok def ->
+        Ok def )
+
 (* parse lexicon record into permission_set *)
 let parse_permission_set record =
-  match lexicon_value_of_yojson record with
+  match extract_main_def record with
   | Error e ->
-      Error ("failed to parse lexicon record: " ^ e)
-  | Ok record -> (
-      if record.type_ <> "permission-set" then
-        Error ("not a permission-set lexicon: " ^ record.type_)
+      Error e
+  | Ok def -> (
+      if def.type_ <> "permission-set" then
+        Error ("not a permission-set lexicon: " ^ def.type_)
       else
-        match record.permissions with
+        match def.permissions with
         | None ->
             Error "permission-set has no permissions"
         | Some permissions ->
             Ok
-              { title= record.title
+              { title= def.title
               ; title_lang= None (* skip localized titles for now *)
-              ; detail= record.detail
+              ; detail= def.detail
               ; detail_lang= None (* skip localized details for now *)
               ; permissions } )
 
@@ -116,3 +135,25 @@ let resolve nsid =
             Lwt.return_ok ps ) ) )
 
 let clear_cache nsid = Ttl_cache.String_cache.remove cache nsid
+
+(* resolve and parse a lexicon document from nsid *)
+let resolve_schema nsid =
+  match Ttl_cache.String_cache.get schema_cache nsid with
+  | Some cached ->
+      Lwt.return_ok cached
+  | None -> (
+    match%lwt resolve_did_authority nsid with
+    | Error e ->
+        Lwt.return_error ("DNS resolution failed: " ^ e)
+    | Ok did -> (
+      match%lwt fetch_lexicon ~did ~nsid with
+      | Error e ->
+          Lwt.return_error ("lexicon fetch failed: " ^ e)
+      | Ok json -> (
+        try
+          let doc = Hermes_cli.Parser.parse_lexicon_doc json in
+          Ttl_cache.String_cache.set schema_cache nsid doc ;
+          Lwt.return_ok doc
+        with Failure e -> Lwt.return_error ("lexicon parse failed: " ^ e) ) ) )
+
+let clear_schema_cache nsid = Ttl_cache.String_cache.remove schema_cache nsid
